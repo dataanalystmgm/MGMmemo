@@ -8,13 +8,13 @@ const ThermalLabel = React.forwardRef(({ data }, ref) => {
     <div ref={ref}>
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
-          @page { size: 80mm 50mm; margin: 0; }
-          body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; }
+          @page { size: 70mm 50mm; margin: 0; }
+          body { margin: 10; padding: 0; -webkit-print-color-adjust: exact; }
           .print-area { display: block !important; }
         }
       `}} />
 
-      <div className="print-area w-[80mm] h-[50mm] p-2 bg-white text-black border-[1px] border-black flex flex-col items-center mx-auto overflow-hidden">
+      <div className="print-area w-[70mm] h-[50mm] p-2 bg-white text-black border-[1px] border-black flex flex-col items-center mx-auto overflow-hidden">
         
         {/* HEADER & BARCODE (Skala 80%) */}
         <div className="w-full flex flex-col items-center border-b border-black pb-1 mb-1">
@@ -22,10 +22,10 @@ const ThermalLabel = React.forwardRef(({ data }, ref) => {
           <div className="scale-[0.8] origin-center">
             <Barcode 
               value={data["ID"] || "00000"} 
-              width={1.5} 
-              height={30} 
-              fontSize={14}
-              margin={0}
+              width={3} 
+              height={50} 
+              fontSize={16}
+              margin={0.2}
               displayValue={true} 
             />
           </div>
