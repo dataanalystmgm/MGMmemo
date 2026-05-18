@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  /* Style Kartu Dashboard */
+  .station-card {
+    @apply bg-white rounded-xl shadow-sm border border-slate-200 transition-all duration-300 hover:shadow-md;
+  }
+
+  /* Animasi Loading Spinner */
+  .spinner {
+    @apply border-4 border-slate-200 border-t-blue-600 rounded-full w-12 h-12 animate-spin;
+  }
+
+  /* Overlay Modal */
+  .modal-overlay {
+    @apply fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50;
+  }
+}
+
+/* Pengaturan Khusus Print Thermal (8cm) */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area, .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm;
+  }
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+}
+
+/* Custom Scrollbar untuk MGM Dashboard */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-slate-100;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full hover:bg-slate-400;
+}
