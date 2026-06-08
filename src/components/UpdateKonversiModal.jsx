@@ -70,7 +70,7 @@ const UpdateKonversiModal = ({ memo, onRefresh, onClose }) => {
         uom: form.uom 
       });
       
-      let isSuccess = false;
+      let isSuccess = true;
       if (res) {
         const responseString = typeof res === 'string' ? res : JSON.stringify(res);
         if (responseString.toLowerCase().includes('success')) {
