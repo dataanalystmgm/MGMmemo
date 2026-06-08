@@ -61,33 +61,48 @@ const UpdateKonversiModal = ({ memo, onRefresh, onClose }) => {
 
     try {
       /**
-       * PENTING: Membungkus data dalam payload agar Code.gs 
-       * bisa membaca payload.qty dan payload.uom (Kolom M & N)
+       * Menggunakan arsitektur pemrosesan respons yang agresif
+       * agar sinkron sempurna dengan pembaharuan Code.gs terbaru
        */
-      await api.sendData('updateKonversi', { 
+      const res = await api.sendData('updateKonversi', { 
         id: memo["ID"], 
-        qty: form.qty, 
+        qty: Number(form.qty), 
         uom: form.uom 
       });
       
-      Swal.fire({
-        icon: 'success',
-        title: 'Data Berhasil Disimpan',
-        text: 'Menyiapkan Barcode...',
-        timer: 1000,
-        showConfirmButton: false
-      }).then(() => {
-        // Jeda agar komponen ThermalLabel (yang transparan) selesai merender SVG Barcode
-        setTimeout(() => {
-          handlePrint();
-        }, 600);
-      });
+      let isSuccess = false;
+      if (res) {
+        const responseString = typeof res === 'string' ? res : JSON.stringify(res);
+        if (responseString.toLowerCase().includes('success')) {
+          isSuccess = true;
+        }
+      } else {
+        isSuccess = true; // Jaringan OK (200), asumsikan data aman masuk database Sheet
+      }
+
+      if (isSuccess) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Data Berhasil Disimpan',
+          text: 'Menyiapkan Barcode...',
+          timer: 1000,
+          showConfirmButton: false
+        }).then(() => {
+          // Jeda agar komponen ThermalLabel (yang transparan) selesai merender SVG Barcode
+          setTimeout(() => {
+            handlePrint();
+          }, 600);
+        });
+      } else {
+        throw new Error(res?.message || "Gagal memperbarui data konversi.");
+      }
       
     } catch (err) {
+      console.error("Detail Error UpdateKonversi:", err);
       Swal.fire({
         icon: 'error',
         title: 'Update Gagal',
-        text: 'Koneksi ke sistem bermasalah.'
+        text: err.message || 'Koneksi ke sistem bermasalah.'
       });
     }
   };
@@ -106,31 +121,47 @@ const UpdateKonversiModal = ({ memo, onRefresh, onClose }) => {
           </svg>
         </button>
 
-        {/* PANEL KIRI: RINGKASAN DATA */}
-        <div className="bg-slate-100 p-6 md:w-1/2 border-r border-slate-200">
-          <h2 className="text-blue-900 font-bold mb-4 border-b border-slate-300 pb-2 uppercase text-sm tracking-tight">Detail Reject</h2>
-          <div className="space-y-3 text-sm">
-            <div className="grid grid-cols-2">
-              <span className="text-slate-500">ID</span>
-              <span className="font-bold text-slate-800">: {memo["ID"]}</span>
+        {/* PANEL KIRI: RINGKASAN DATA & INFORMASI QTY FISIK */}
+        <div className="bg-slate-100 p-6 md:w-1/2 border-r border-slate-200 flex flex-col justify-between">
+          <div>
+            <h2 className="text-blue-900 font-bold mb-4 border-b border-slate-300 pb-2 uppercase text-sm tracking-tight">Detail Reject</h2>
+            <div className="space-y-3 text-sm">
+              <div className="grid grid-cols-2">
+                <span className="text-slate-500">ID</span>
+                <span className="font-bold text-slate-800">: {memo["ID"]}</span>
+              </div>
+              <div className="grid grid-cols-2">
+                <span className="text-slate-500">SPO#</span>
+                <span className="font-bold text-slate-800">: {memo["SPO#"]}</span>
+              </div>
+              <div className="grid grid-cols-2">
+                <span className="text-slate-500">Style</span>
+                <span className="font-bold text-slate-800">: {memo["Style"]}</span>
+              </div>
+              <div className="grid grid-cols-2">
+                <span className="text-slate-500">Part Material</span>
+                <span className="font-bold text-slate-800">: {memo["Part/Material"]}</span>
+              </div>
+              
+              <hr className="border-slate-300 my-2" />
+              
+              {/* PENAMBAHAN INFORMASI INFORMASI QTY KIRI & KANAN (BAWAAN AWAL MEMO) */}
+              <div className="bg-white p-3 rounded-xl border border-slate-200 grid grid-cols-2 gap-2 text-center">
+                <div className="border-r border-slate-100">
+                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Qty Kiri</p>
+                  <p className="text-lg font-black text-indigo-600 mt-0.5">{memo["Pcs Kiri"] || 0} <span className="text-[10px] font-normal text-slate-400">Pcs</span></p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Qty Kanan</p>
+                  <p className="text-lg font-black text-emerald-600 mt-0.5">{memo["Pcs Kanan"] || 0} <span className="text-[10px] font-normal text-slate-400">Pcs</span></p>
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-2">
-              <span className="text-slate-500">SPO#</span>
-              <span className="font-bold text-slate-800">: {memo["SPO#"]}</span>
-            </div>
-            <div className="grid grid-cols-2">
-              <span className="text-slate-500">Style</span>
-              <span className="font-bold text-slate-800">: {memo["Style"]}</span>
-            </div>
-            <div className="grid grid-cols-2">
-              <span className="text-slate-500">Part Material</span>
-              <span className="font-bold text-slate-800">: {memo["Part/Material"]}</span>
-            </div>
-            <hr className="border-slate-300" />
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-              <p className="text-[10px] text-blue-400 uppercase font-bold">Status Produksi:</p>
-              <p className="text-xs italic text-blue-700">Validasi Konversi 3R System</p>
-            </div>
+          </div>
+
+          <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+            <p className="text-[10px] text-blue-400 uppercase font-bold">Status Produksi:</p>
+            <p className="text-xs italic text-blue-700">Validasi Konversi 3R System</p>
           </div>
         </div>
 
@@ -160,6 +191,7 @@ const UpdateKonversiModal = ({ memo, onRefresh, onClose }) => {
                   type="number" 
                   step="any"
                   required
+                  autoFocus
                   className="w-full border-2 border-blue-100 p-3 rounded-xl focus:border-blue-500 outline-none font-bold text-lg"
                   value={form.qty}
                   onChange={e => setForm({...form, qty: e.target.value})}
@@ -193,10 +225,7 @@ const UpdateKonversiModal = ({ memo, onRefresh, onClose }) => {
         </div>
       </div>
 
-      {/* AREA PRINT (HIDDEN DYNAMICS): 
-          Menggunakan Opacity 0.01 agar browser tetap merender 
-          komponen Barcode sebelum jendela print menangkap gambarnya.
-      */}
+      {/* AREA PRINT (HIDDEN DYNAMICS) */}
       <div 
         style={{ 
           position: 'absolute', 
