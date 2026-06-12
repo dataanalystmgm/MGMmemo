@@ -20,21 +20,24 @@ const DashboardCard = ({ title, data, type, stationKey, onRefresh }) => {
           <p className="text-gray-400 text-xs italic text-center py-4">Kosong</p>
         ) : (
           data.map((item, idx) => {
-            // LOGIKA COLOUR MANAGEMENT BERDASARKAN STATUS START
-            // Menyusun nama kolom target, contoh: "Start_Cutting" atau "Start_Sewing"
-            const startColumnKey = `Start_${stationKey}`;
-            const isStarted = item[startColumnKey] && item[startColumnKey].toString().trim() !== "";
+  // 1. Tentukan target nama kolom (misal: "Start_Sewing")
+  const targetKey = `Start_${stationKey}`.toLowerCase().trim();
 
-            // Menentukan class warna background dan border card item
-            const cardStyleClass = isStarted 
-              ? "bg-amber-50/70 border-amber-200 hover:border-amber-400 text-amber-900" // On Progress (Kuning Muda)
-              : "bg-rose-50/60 border-rose-200 hover:border-rose-300 text-rose-900";    // Not Started (Merah Muda)
+  // 2. Cari nama kolom asli di dalam data item yang cocok (Abaikan huruf besar/kecil & spasi)
+  const actualKey = Object.keys(item).find(
+    (key) => key.toLowerCase().trim() === targetKey
+  );
 
-            return (
-              <div 
-                key={idx} 
-                className={`p-3 border rounded-lg transition-all shadow-sm ${cardStyleClass}`}
-              >
+  // 3. Deteksi murni: Cukup pastikan isinya tidak kosong saja!
+  const isStarted = actualKey && item[actualKey] !== undefined && item[actualKey] !== null && item[actualKey].toString().trim() !== "";
+
+  // 4. Tentukan warna card berdasarkan deteksi di atas
+  const cardStyleClass = isStarted 
+    ? "bg-amber-50/70 border-amber-200 hover:border-amber-400 text-amber-900" // On Progress (Kuning)
+    : "bg-rose-50/60 border-rose-200 hover:border-rose-300 text-rose-900";    // Not Started (Merah Muda)
+
+  return (
+    <div key={idx} className={`p-3 border rounded-lg transition-all shadow-sm ${cardStyleClass}`}>
                 <div className="flex justify-between items-start mb-1">
                   <span className={`text-[10px] font-bold ${isStarted ? 'text-amber-700' : 'text-rose-700'}`}>
                     {item['SPO#']}
@@ -51,7 +54,7 @@ const DashboardCard = ({ title, data, type, stationKey, onRefresh }) => {
                     </span>
                   </div>
                 </div>
-                
+
                 <p className="text-xs font-bold truncate text-slate-800">{item.Style}</p>
                 <p className="text-[10px] font-medium text-slate-500">{item["Part/Material"]} - {item.Size}</p>
                 
