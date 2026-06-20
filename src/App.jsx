@@ -21,10 +21,10 @@ function App() {
     { name: "3R", start: "Start_3R", end: "Finish_3R" },
     { name: "Gudang", start: "Start_Gudang", end: "Finish_Gudang" },
     { name: "Cutting", start: "Start_Cutting", end: "Finish_Cutting" },
-    { name: "Accesories", start: "Start_Accesories", end: "Finish_Accesories" },
+    { name: "Accessories", start: "Start_Accessories", end: "Finish_Accessories" },
     { name: "Incoming", start: "Start_Incoming", end: "Finish_Incoming" },
     { name: "Auto", start: "Start_Auto", end: "Finish_Auto" },
-    { name: "M4/HT", start: "Start_M4HT", end: "Finish_M4HT" },
+    { name: "M4/HT", start: "Start_M4/HT", end: "Finish_M4/HT" },
     { name: "Sewing", start: "Start_Sewing", end: "Finish_Sewing" },
   ];
 

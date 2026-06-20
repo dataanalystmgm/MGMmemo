@@ -51,7 +51,7 @@ const ScannerModal = ({ type, memos, stations, onClose, onRefresh }) => {
           inputOptions: {
             'Gudang': 'Gudang',
             'Cutting': 'Cutting',
-            'Accesories': 'Accesories',
+            'Accessories': 'Accessories',
             'Incoming': 'Incoming',
             'Auto': 'Auto',
             'M4/HT': 'M4/HT',
