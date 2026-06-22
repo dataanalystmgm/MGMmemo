@@ -49,9 +49,9 @@ function App() {
         </div>
         <button 
           onClick={() => setShowAdd(true)} 
-          className="bg-blue-600 hover:bg-blue-700 text-white w-12 h-12 rounded-full text-3xl shadow-lg flex items-center justify-center transition-transform active:scale-90"
+          className="bg-blue-600 hover:bg-blue-700 text-white w-40 h-12 text-lg shadow-lg flex items-center justify-center transition-transform active:scale-90"
         >
-          +
+          Add Memo
         </button>
       </header>
 
