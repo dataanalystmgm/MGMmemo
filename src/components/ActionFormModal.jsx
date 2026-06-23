@@ -8,9 +8,10 @@ const ActionFormModal = ({ memos, stations, onClose, onRefresh }) => {
   const [currentStation, setCurrentStation] = useState("");
   const [nextStation, setNextStation] = useState("");
   const [isStationLocked, setIsStationLocked] = useState(false);
-  const [isStartDisabled, setIsStartDisabled] = useState(false); // State pengunci tombol START
+  const [isStartDisabled, setIsStartDisabled] = useState(false); // Jika sudah start, matikan tombol START
+  const [isFinishDisabled, setIsFinishDisabled] = useState(false); // SEKARANG: Jika belum start, matikan tombol FINISH
 
-  // LOGIKA DINAMIS DETEKSI STASIUN (AH) & STATUS START
+  // LOGIKA DINAMIS DETEKSI STASIUN (AH) & STATUS VALIDASI JAM FIELD
   useEffect(() => {
     let formattedId = memoId.toLowerCase().trim();
     if (formattedId && !formattedId.startsWith('m')) {
@@ -33,15 +34,20 @@ const ActionFormModal = ({ memos, stations, onClose, onRefresh }) => {
 
           // 2. Cek apakah kolom Start_NamaStasiun sudah terisi di database
           const startColumnKey = targetStationConfig.start; // Misal: "Start_Cutting"
-          const isStartAlreadyFilled = matchedItem[startColumnKey];
+          const startValue = matchedItem[startColumnKey];
+          const isStartAlreadyFilled = startValue && startValue.toString().trim() !== "" && startValue.toString().trim() !== "-" && startValue.toString().toLowerCase() !== "false";
 
           if (isStartAlreadyFilled) {
-            // Jika sudah di-START sebelumnya, paksa hanya bisa FINISH
+            // JIKA SUDAH START: Paksa hanya bisa FINISH
             setIsStartDisabled(true);
+            setIsFinishDisabled(false);
             setActivityType("finish");
           } else {
+            // JIKA BELUM START: Paksa hanya bisa START (Tombol FINISH dinonaktifkan)
             setIsStartDisabled(false);
+            setIsFinishDisabled(true);
             setActivityType("start");
+            setNextStation("");
           }
           return;
         }
@@ -52,6 +58,7 @@ const ActionFormModal = ({ memos, stations, onClose, onRefresh }) => {
     setCurrentStation("");
     setIsStationLocked(false);
     setIsStartDisabled(false);
+    setIsFinishDisabled(false);
     setActivityType("start");
   }, [memoId, memos, stations]);
 
@@ -65,6 +72,12 @@ const ActionFormModal = ({ memos, stations, onClose, onRefresh }) => {
 
     if (activityType === 'finish' && !nextStation) {
       Swal.fire({ icon: 'warning', title: 'Next Station Kosong', text: 'Jika proses FINISH, Anda wajib memilih Next Station.' });
+      return;
+    }
+
+    // Proteksi tambahan tingkat akhir saat form disubmit
+    if (activityType === 'finish' && isFinishDisabled) {
+      Swal.fire({ icon: 'error', title: 'Aksi Ditolak', text: 'Proses FINISH tidak dapat dikirim karena stasiun ini belum melakukan scan START!' });
       return;
     }
 
@@ -170,7 +183,7 @@ const ActionFormModal = ({ memos, stations, onClose, onRefresh }) => {
             />
           </div>
 
-          {/* CHECKLIST AKTIVITAS (DENGAN LOCK AUTO-FINISH) */}
+          {/* CHECKLIST AKTIVITAS (DENGAN LOCK AUTO-FINISH / AUTO-START) */}
           <div>
             <div className="flex justify-between items-center">
               <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">2. Jenis Aktivitas</label>
@@ -179,7 +192,13 @@ const ActionFormModal = ({ memos, stations, onClose, onRefresh }) => {
                   ⚠️ Wajib Finish
                 </span>
               )}
+              {isFinishDisabled && memoId && (
+                <span className="text-[9px] bg-amber-100 text-amber-800 font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wide">
+                  ⏳ Wajib Start Dulu
+                </span>
+              )}
             </div>
+            
             <div className="grid grid-cols-2 gap-3 mt-1.5">
               {/* TOMBOL START */}
               <label className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 font-bold text-xs transition-all ${
@@ -205,12 +224,21 @@ const ActionFormModal = ({ memos, stations, onClose, onRefresh }) => {
               </label>
 
               {/* TOMBOL FINISH */}
-              <label className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 font-bold text-xs cursor-pointer transition-all ${
-                activityType === 'finish' ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+              <label className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 font-bold text-xs transition-all ${
+                isFinishDisabled
+                  ? 'border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed opacity-50'
+                  : activityType === 'finish' 
+                    ? 'border-emerald-600 bg-emerald-50 text-emerald-700 cursor-pointer' 
+                    : 'border-slate-200 text-slate-500 hover:bg-slate-50 cursor-pointer'
               }`}>
                 <input 
-                  type="radio" name="activity" value="finish" className="hidden"
-                  checked={activityType === 'finish'} onChange={() => setActivityType('finish')}
+                  type="radio" 
+                  name="activity" 
+                  value="finish" 
+                  className="hidden"
+                  disabled={isFinishDisabled}
+                  checked={activityType === 'finish'} 
+                  onChange={() => setActivityType('finish')}
                 />
                 <span>■ FINISH PROCESS</span>
               </label>
@@ -253,10 +281,10 @@ const ActionFormModal = ({ memos, stations, onClose, onRefresh }) => {
           </div>
 
           {/* CHECKLIST NEXT STATION */}
-          <div className={`transition-all duration-300 ${activityType === 'finish' ? 'opacity-100 max-h-24' : 'opacity-0 max-h-0 overflow-hidden'}`}>
+          <div className={`transition-all duration-300 ${activityType === 'finish' && !isFinishDisabled ? 'opacity-100 max-h-24' : 'opacity-0 max-h-0 overflow-hidden'}`}>
             <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">4. Next Station (Tujuan Selanjutnya)</label>
             <select
-              required={activityType === 'finish'}
+              required={activityType === 'finish' && !isFinishDisabled}
               className="w-full border-2 border-slate-200 focus:border-emerald-500 p-3 mt-1.5 rounded-xl bg-white text-xs font-bold text-slate-700 outline-none transition-all"
               value={nextStation}
               onChange={(e) => setNextStation(e.target.value)}
